@@ -1,0 +1,14 @@
+{{ define "content" }}
+<div class="search-section">
+    <input type="text" id="city" placeholder="Enter city..." />
+    <button 
+        hx-get="/weather"
+        hx-target="#weatherResult"
+        hx-vals='js:{"city": document.getElementById("city").value}'
+        hx-swap="innerHTML">
+        Search
+    </button>
+</div>
+<div id="weatherResult" class="result-card"></div>
+{{ end }}
+{{ template "base.html" . }}

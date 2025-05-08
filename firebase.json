@@ -1,0 +1,13 @@
+{
+  "hosting": {
+    "rewrites": [
+      {
+        "source": "**",
+        "run": {
+          "serviceId": "htmx-app",
+          "region": "us-central1"
+        }
+      }
+    ]
+  }
+}

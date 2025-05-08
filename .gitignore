@@ -1,0 +1,39 @@
+# Binaries for programs and plugins
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Output of build tools
+bin/
+build/
+
+# Dependency directories
+vendor/
+
+# Go modules
+go.sum
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+
+# Environment variables
+.env
+
+# Service account keys (DO NOT COMMIT THESE)
+serviceAccountKey.json
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.old
+
+# OS-specific files
+.DS_Store
+Thumbs.db
