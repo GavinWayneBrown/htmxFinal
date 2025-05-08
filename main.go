@@ -10,13 +10,15 @@ import (
 	"net/http"
 	"os"
 	"sync"
+	"time"
 
 	"cloud.google.com/go/firestore"
 	"google.golang.org/api/option"
 )
 
 var templates *template.Template
-var users = map[string]string{} // In-memory user store (email:password)
+var users = map[string]string{}    // In-memory user store (email:password)
+var sessions = map[string]string{} // sessionID: email
 var mu sync.Mutex
 var db *firestore.Client
 
@@ -36,8 +38,9 @@ func main() {
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	http.HandleFunc("/", homeHandler)
-	http.HandleFunc("/login", loginHandler)
 	http.HandleFunc("/signup", signupHandler)
+	http.HandleFunc("/login", loginHandler)
+	http.HandleFunc("/logout", logoutHandler)
 	http.HandleFunc("/weather", weatherHandler)
 
 	port := os.Getenv("PORT")
@@ -49,11 +52,20 @@ func main() {
 }
 
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		templates.ExecuteTemplate(w, "home.html", nil)
-		return
+	sessionID, err := r.Cookie("session_id")
+	data := map[string]interface{}{
+		"LoggedIn": false,
 	}
-	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+
+	if err == nil {
+		email, exists := sessions[sessionID.Value]
+		if exists {
+			data["LoggedIn"] = true
+			data["Email"] = email
+		}
+	}
+
+	templates.ExecuteTemplate(w, "home.html", data)
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
@@ -61,42 +73,75 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		templates.ExecuteTemplate(w, "login.html", nil)
 		return
 	}
+
 	if r.Method == http.MethodPost {
 		email := r.FormValue("email")
 		password := r.FormValue("password")
 
 		mu.Lock()
 		defer mu.Unlock()
-		if pass, exists := users[email]; exists && pass == password {
-			templates.ExecuteTemplate(w, "home.html", map[string]string{"Message": "Logged in as " + email})
+
+		if storedPassword, exists := users[email]; !exists || storedPassword != password {
+			http.Error(w, "Invalid email or password", http.StatusUnauthorized)
 			return
 		}
-		http.Error(w, "Invalid login credentials", http.StatusUnauthorized)
-		return
+
+		// Create a session
+		sessionID := fmt.Sprintf("%d", time.Now().UnixNano())
+		sessions[sessionID] = email
+		http.SetCookie(w, &http.Cookie{
+			Name:  "session_id",
+			Value: sessionID,
+			Path:  "/",
+		})
+
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
-	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+}
+
+func logoutHandler(w http.ResponseWriter, r *http.Request) {
+	sessionID, err := r.Cookie("session_id")
+	if err == nil {
+		mu.Lock()
+		delete(sessions, sessionID.Value)
+		mu.Unlock()
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:   "session_id",
+		Value:  "",
+		Path:   "/",
+		MaxAge: -1,
+	})
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func signupHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		templates.ExecuteTemplate(w, "signup.html", nil)
+		err := templates.ExecuteTemplate(w, "signup.html", nil)
+		if err != nil {
+			log.Printf("Error rendering signup template: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
 		return
 	}
+
 	if r.Method == http.MethodPost {
 		email := r.FormValue("email")
 		password := r.FormValue("password")
 
 		mu.Lock()
 		defer mu.Unlock()
+
 		if _, exists := users[email]; exists {
 			http.Error(w, "User already exists", http.StatusConflict)
 			return
 		}
+
 		users[email] = password
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		return
 	}
-	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 }
 
 func weatherHandler(w http.ResponseWriter, r *http.Request) {

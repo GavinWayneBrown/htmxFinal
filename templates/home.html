@@ -1,4 +1,10 @@
 {{ define "content" }}
+{{ if .LoggedIn }}
+<p>Welcome, {{ .Email }}!</p>
+<a href="/logout">Logout</a>
+{{ else }}
+<p>Welcome to the Weather App! Please <a href="/login">login</a> or <a href="/signup">signup</a>.</p>
+{{ end }}
 <div class="search-section">
     <input type="text" id="city" placeholder="Enter city..." />
     <button 
