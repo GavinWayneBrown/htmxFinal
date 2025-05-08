@@ -32,29 +32,63 @@ nav a {
 }
 
 main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 80vh; /* Center vertically */
     padding: 2rem;
     text-align: center;
 }
 
-input[type="text"] {
-    padding: 10px;
-    width: 250px;
-    margin: 10px 0;
-    border-radius: 8px;
-    border: none;
+/* Form container */
+form {
+    max-width: 400px;
+    margin: 0 auto; /* Center the form */
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
 }
 
+/* Input fields */
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+    width: 100%; /* Full width */
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+/* Buttons */
 button {
-    padding: 10px 20px;
+    width: 100%; /* Full width */
+    padding: 10px;
     background-color: #00c3ff;
-    color: black;
+    color: white;
     border: none;
-    border-radius: 8px;
+    border-radius: 5px;
+    font-size: 16px;
     cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
 button:hover {
     background-color: #009bcc;
+}
+
+/* Links */
+a {
+    color: #005e7a;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+a:hover {
+    text-decoration: underline;
 }
 
 search-section {
