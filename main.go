@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"cloud.google.com/go/firestore"
-	"google.golang.org/api/option"
 )
 
 var templates *template.Template
@@ -27,8 +26,9 @@ func main() {
 	templates = template.Must(template.ParseGlob("templates/*.html"))
 
 	// Firestore init with service account
-	opt := option.WithCredentialsFile("serviceAccountKey.json")
-	client, err := firestore.NewClient(ctx, os.Getenv("GOOGLE_CLOUD_PROJECT"), opt)
+	projectID := os.Getenv("GOOGLE_CLOUD_PROJECT")
+	client, err := firestore.NewClient(ctx, projectID)
+
 	if err != nil {
 		log.Fatalf("Failed to initialize Firestore: %v", err)
 	}
@@ -47,7 +47,6 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
-	fmt.Println("Server running on port", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
